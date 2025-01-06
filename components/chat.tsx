@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Bot, Send, User } from "lucide-react";
+import ReactMarkdown from "react-markdown";
 
 export interface Message {
   id: string;
@@ -105,9 +106,9 @@ export function Chat() {
                     : "bg-muted"
                 }`}
               >
-                <p className="whitespace-pre-wrap break-words">
+                <ReactMarkdown className="whitespace-pre-wrap break-words">
                   {message.content}
-                </p>
+                </ReactMarkdown>
               </div>
             </div>
           ))}
