@@ -1,16 +1,23 @@
-// app/api/langflow/route.ts
+import { NextResponse } from "next/server";
 
 export async function POST(req: Request) {
   try {
-    const { message } = await req.json();
+    const { message, chatId } = await req.json();
 
     // Validate input
-    if (!message) {
-      return Response.json({ error: "No message provided" }, { status: 400 });
+    if (!message || !chatId) {
+      return NextResponse.json({ error: "Invalid input" }, { status: 400 });
     }
 
     const apiUrl = process.env.LANGFLOW_API_URL;
     const apiKey = process.env.LANGFLOW_API_KEY;
+
+    if (!apiUrl || !apiKey) {
+      return NextResponse.json(
+        { error: "API configuration missing" },
+        { status: 500 }
+      );
+    }
 
     // Prepare the request body
     const requestBody = {
@@ -33,7 +40,7 @@ export async function POST(req: Request) {
     };
 
     // Make the API call using fetch
-    const response = await fetch(apiUrl!, {
+    const response = await fetch(apiUrl, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -44,24 +51,21 @@ export async function POST(req: Request) {
 
     // Check if the response is ok
     if (!response.ok) {
-      const errorData = await response.json();
-      return Response.json(
-        { message: "Something went wrong contact the developer" },
+      return NextResponse.json(
+        { error: "Failed to generate response" },
         { status: response.status }
       );
     }
 
     // Return the response from the Langflow API
     const data = await response.json();
-    console.log(data.outputs[0].outputs[0].results.message.text);
-    return Response.json(
-      { message: data.outputs[0].outputs[0].results.message.text },
-      { status: 200 }
-    );
+    const generatedMessage = data.outputs[0].outputs[0].results.message.text;
+
+    return NextResponse.json({ message: generatedMessage }, { status: 200 });
   } catch (error) {
     console.error("Error calling Langflow API:", error);
-    return Response.json(
-      { message: "Something went wrong contact the developer" },
+    return NextResponse.json(
+      { error: "Internal server error" },
       { status: 500 }
     );
   }

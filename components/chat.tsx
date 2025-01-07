@@ -8,15 +8,21 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Bot, Send, User } from "lucide-react";
 import ReactMarkdown from "react-markdown";
+import { addMessage } from "@/app/actions";
 
 export interface Message {
   id: string;
   content: string;
-  role: "user" | "assistant";
+  role: string;
 }
 
-export function Chat() {
-  const [messages, setMessages] = useState<Message[]>([]);
+interface ChatProps {
+  initialMessages: Message[];
+  chatId: string;
+}
+
+export function Chat({ initialMessages, chatId }: ChatProps) {
+  const [messages, setMessages] = useState<Message[]>(initialMessages);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -31,40 +37,30 @@ export function Chat() {
     e.preventDefault();
     if (!input.trim() || isLoading) return;
 
-    const userMessage: Message = {
-      id: Date.now().toString(),
-      content: input,
-      role: "user",
-    };
-
-    setMessages((prev) => [...prev, userMessage]);
-    setInput("");
     setIsLoading(true);
 
     try {
+      const userMessage = await addMessage(chatId, input, "user");
+      setMessages((prev) => [...prev, userMessage]);
+      setInput("");
+
       const response = await fetch("/api/chat", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ message: input }),
+        body: JSON.stringify({ message: input, chatId }),
       });
 
       if (!response.ok) {
-        console.error("Error fetching chat response:", response);
+        throw new Error("Failed to generate response");
       }
 
       const data = await response.json();
-      const aiMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        content: data.message,
-        role: "assistant",
-      };
-      console.log(data);
-
+      const aiMessage = await addMessage(chatId, data.message, "assistant");
       setMessages((prev) => [...prev, aiMessage]);
     } catch (error) {
-      console.error("Error fetching chat response:", error);
+      console.error("Error in chat:", error);
       // You might want to show an error message to the user here
     } finally {
       setIsLoading(false);
