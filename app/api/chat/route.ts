@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 export async function POST(req: Request) {
   try {
     const { message, chatId } = await req.json();
+    console.log("Received request:", { message, chatId });
 
     // Validate input
     if (!message || !chatId) {
