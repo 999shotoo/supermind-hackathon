@@ -9,6 +9,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Bot, Send, User } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import { addMessage } from "@/app/actions";
+import { useParams } from "next/navigation";
 
 export interface Message {
   id: string;
@@ -18,15 +19,15 @@ export interface Message {
 
 interface ChatProps {
   initialMessages: Message[];
-  chatId: string;
 }
 
-export function Chat({ initialMessages, chatId }: ChatProps) {
+export function Chat({ initialMessages }: ChatProps) {
   const [messages, setMessages] = useState<Message[]>(initialMessages);
+  const params = useParams();
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
-
+  const chatId = params.id as string;
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
