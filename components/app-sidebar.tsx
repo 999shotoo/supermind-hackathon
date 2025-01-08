@@ -8,32 +8,23 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import { Button } from "./ui/button";
+import { PrismaClient } from "@prisma/client";
+import { auth } from "@clerk/nextjs/server";
+
+const prisma = new PrismaClient();
 
 // Menu items.
-const items = [
-  {
-    title: "Chat #69",
-    url: "#",
-  },
-  {
-    title: "Chat #69",
-    url: "#",
-  },
-  {
-    title: "Chat #69",
-    url: "#",
-  },
-  {
-    title: "Chat #69",
-    url: "#",
-  },
-  {
-    title: "Chat #69",
-    url: "#",
-  },
-];
+export async function AppSidebar() {
+  const { userId } = await auth();
 
-export function AppSidebar() {
+  if (!userId) {
+    return null;
+  }
+
+  const chats = await prisma.chat.findMany({
+    where: { userId },
+    orderBy: { createdAt: "desc" },
+  });
   return (
     <Sidebar>
       <SidebarContent>
@@ -44,11 +35,11 @@ export function AppSidebar() {
               <SidebarMenuItem className="mb-4">
                 <Button className="w-full">+ Start New Chat</Button>
               </SidebarMenuItem>
-              {items.map((item, index) => (
+              {chats.map((chat, index) => (
                 <SidebarMenuItem key={index}>
                   <SidebarMenuButton asChild>
-                    <a href={item.url}>
-                      <span>{item.title}</span>
+                    <a href={`/chat/${chat.id}`}>
+                      <span>{chat.title}</span>
                     </a>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
